@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    image: max-hackathon:latest
+    container_name: max-hackathon
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: true
+      - path: admin.vars
+        required: false
+    ports:
+      - "127.0.0.1:${APP_PORT:-8092}:3000"
+    volumes:
+      - ./data:/app/data

@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_ToBe" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.29.0">
+  <bpmn:collaboration id="Collaboration_ToBe_Game">
+    <bpmn:participant id="Participant_Players" name="Игроки в чате MAX" processRef="Process_Players" />
+    <bpmn:participant id="Participant_ChatBot" name="Чат-бот MAX" processRef="Process_ChatBot" />
+    <bpmn:participant id="Participant_MiniApp" name="Мини-приложение" processRef="Process_MiniApp" />
+    <bpmn:participant id="Participant_Backend" name="Backend продукта" processRef="Process_Backend" />
+    <bpmn:messageFlow id="MsgFlow_4" name="" sourceRef="Task_SendOpenButton" targetRef="Event_MiniAppStart" />
+    <bpmn:messageFlow id="MsgFlow_5" name="" sourceRef="Task_StartSession" targetRef="Event_BackendStart" />
+    <bpmn:messageFlow id="MsgFlow_6" name="" sourceRef="Task_BackendCreateSession" targetRef="SubProcess_GameCycle" />
+    <bpmn:messageFlow id="MsgFlow_7" name="" sourceRef="Task_MarkCardDiscussed" targetRef="Task_BackendFixCard" />
+    <bpmn:messageFlow id="MsgFlow_8" name="" sourceRef="Task_FormResults" targetRef="Task_ShowResults" />
+    <bpmn:messageFlow id="MsgFlow_9" name="" sourceRef="Task_ShowResults" targetRef="Event_ResultsReceived" />
+    <bpmn:messageFlow id="MsgFlow_10" name="" sourceRef="Task_BotOfferReminder" targetRef="Task_SetReminder" />
+    <bpmn:messageFlow id="Flow_0nsdqdj" sourceRef="Activity_0smljod" targetRef="Event_BotStart" />
+    <bpmn:textAnnotation id="Annotation_1">
+      <bpmn:text>Готовые колоды: вопросы не нужно придумывать</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1" sourceRef="Task_OpenCatalog" targetRef="Annotation_1" />
+    <bpmn:textAnnotation id="Annotation_2">
+      <bpmn:text>Итоги и историю встреч сохраняет backend</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_2" sourceRef="Task_FormResults" targetRef="Annotation_2" />
+    <bpmn:textAnnotation id="Annotation_3">
+      <bpmn:text>Нет правильных ответов: карточки для обсуждения, а не экзамен</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_3" sourceRef="Task_ShowCard" targetRef="Annotation_3" />
+    <bpmn:textAnnotation id="Annotation_4">
+      <bpmn:text>Напоминания возвращают игроков в продукт</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_4" sourceRef="Task_SetReminder" targetRef="Annotation_4" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_Players" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Players">
+      <bpmn:lane id="Lane_Initiator" name="Инициатор" />
+      <bpmn:lane id="Lane_Participants" name="Участники" />
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Event_Start" name="Игрок отправляет /start">
+      <bpmn:outgoing>Flow_07ozq5z</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_DiscussToEnd" sourceRef="Task_PlayersDiscuss" targetRef="Event_PlayersEnd" />
+    <bpmn:userTask id="Activity_0smljod" name="Режим карточек">
+      <bpmn:incoming>Flow_07ozq5z</bpmn:incoming>
+      <bpmn:outgoing>Flow_01n4m2w</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_07ozq5z" sourceRef="Event_Start" targetRef="Activity_0smljod" />
+    <bpmn:userTask id="Task_PlayersDiscuss" name="Игроки обсуждают карточки">
+      <bpmn:incoming>Flow_01n4m2w</bpmn:incoming>
+      <bpmn:outgoing>Flow_DiscussToEnd</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_01n4m2w" sourceRef="Activity_0smljod" targetRef="Task_PlayersDiscuss" />
+    <bpmn:endEvent id="Event_PlayersEnd" name="Завершили обсуждение">
+      <bpmn:incoming>Flow_DiscussToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmn:process id="Process_ChatBot" isExecutable="false">
+    <bpmn:sequenceFlow id="Flow_BotStartToWelcome" sourceRef="Event_BotStart" targetRef="Task_BotWelcome" />
+    <bpmn:sequenceFlow id="Flow_WelcomeToAsk" sourceRef="Task_BotWelcome" targetRef="Task_SendOpenButton" />
+    <bpmn:sequenceFlow id="Flow_OpenToWait" sourceRef="Task_SendOpenButton" targetRef="Event_ResultsReceived" />
+    <bpmn:sequenceFlow id="Flow_ResultsToNotify" sourceRef="Event_ResultsReceived" targetRef="Task_BotNotifyResult" />
+    <bpmn:sequenceFlow id="Flow_NotifyToReminder" sourceRef="Task_BotNotifyResult" targetRef="Task_BotOfferReminder" />
+    <bpmn:sequenceFlow id="Flow_OfferToGateway" sourceRef="Task_BotOfferReminder" targetRef="Gateway_ReminderAgreed" />
+    <bpmn:sequenceFlow id="Flow_ReminderYes" name="Да" sourceRef="Gateway_ReminderAgreed" targetRef="Event_ReminderSet">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reminder == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ReminderNo" name="Нет" sourceRef="Gateway_ReminderAgreed" targetRef="Event_GameComplete" />
+    <bpmn:task id="Task_BotWelcome" name="Приветствие">
+      <bpmn:incoming>Flow_BotStartToWelcome</bpmn:incoming>
+      <bpmn:outgoing>Flow_WelcomeToAsk</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:startEvent id="Event_BotStart" name="Получен /cards">
+      <bpmn:outgoing>Flow_BotStartToWelcome</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:task id="Task_SendOpenButton" name="Отправить кнопку &#34;Открыть игру&#34;">
+      <bpmn:incoming>Flow_WelcomeToAsk</bpmn:incoming>
+      <bpmn:outgoing>Flow_OpenToWait</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateCatchEvent id="Event_ResultsReceived" name="Получены итоги встречи">
+      <bpmn:incoming>Flow_OpenToWait</bpmn:incoming>
+      <bpmn:outgoing>Flow_ResultsToNotify</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="Task_BotNotifyResult" name="Уведомление в чат с итогом и кнопкой &#34;Поделиться&#34;">
+      <bpmn:incoming>Flow_ResultsToNotify</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifyToReminder</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_BotOfferReminder" name="Предложить напомнить поиграть завтра">
+      <bpmn:incoming>Flow_NotifyToReminder</bpmn:incoming>
+      <bpmn:outgoing>Flow_OfferToGateway</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_ReminderAgreed" name="Согласие на напоминание?" default="Flow_ReminderNo">
+      <bpmn:incoming>Flow_OfferToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_ReminderYes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ReminderNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_ReminderSet" name="Напоминание установлено">
+      <bpmn:incoming>Flow_ReminderYes</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_GameComplete" name="Игра завершена">
+      <bpmn:incoming>Flow_ReminderNo</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmn:process id="Process_MiniApp" isExecutable="false">
+    <bpmn:startEvent id="Event_MiniAppStart" name="Открыт мини-апп">
+      <bpmn:outgoing>Flow_MiniAppStartToCatalog</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:task id="Task_OpenCatalog" name="Открыть каталог колод">
+      <bpmn:incoming>Flow_MiniAppStartToCatalog</bpmn:incoming>
+      <bpmn:outgoing>Flow_CatalogToFilters</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_ApplyFilters" name="Применить фильтры (тема, настроение, язык)">
+      <bpmn:incoming>Flow_CatalogToFilters</bpmn:incoming>
+      <bpmn:outgoing>Flow_FiltersToSelect</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_SelectDeck" name="Выбрать колоду">
+      <bpmn:incoming>Flow_FiltersToSelect</bpmn:incoming>
+      <bpmn:outgoing>Flow_SelectToStart</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_StartSession" name="Старт сессии">
+      <bpmn:incoming>Flow_SelectToStart</bpmn:incoming>
+      <bpmn:incoming>Flow_ReturnFromExit</bpmn:incoming>
+      <bpmn:outgoing>Flow_StartToGameCycle</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_ShowResults" name="Экран &#34;Итоги встречи&#34;">
+      <bpmn:incoming>Flow_GameCycleToResults</bpmn:incoming>
+      <bpmn:outgoing>Flow_ResultsEnd</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_MiniAppEnd" name="Завершено">
+      <bpmn:incoming>Flow_ResultsEnd</bpmn:incoming>
+      <bpmn:incoming>Flow_PauseToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_SaveProgress" name="Сохранить прогресс сессии">
+      <bpmn:incoming>Flow_ExitToSave</bpmn:incoming>
+      <bpmn:outgoing>Flow_SaveToDeepLink</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_DeepLinkReturn" name="Возврат по глубокой ссылке">
+      <bpmn:incoming>Flow_SaveToDeepLink</bpmn:incoming>
+      <bpmn:outgoing>Flow_ReturnFromExit</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_PauseSession" name="Приостановить сессию">
+      <bpmn:incoming>Flow_TimeoutToPause</bpmn:incoming>
+      <bpmn:outgoing>Flow_PauseToEnd</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateCatchEvent id="Boundary_Timeout" name="Неактивность &#62; 10 мин">
+      <bpmn:outgoing>Flow_TimeoutToPause</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_14n6p9w" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:subProcess id="SubProcess_GameCycle" name="Игровой цикл">
+      <bpmn:incoming>Flow_StartToGameCycle</bpmn:incoming>
+      <bpmn:outgoing>Flow_GameCycleToResults</bpmn:outgoing>
+      <bpmn:startEvent id="Event_CycleStart" name="Начало раунда">
+        <bpmn:outgoing>Flow_CycleStartToShowCard</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="Task_ShowCard" name="Показать карточку-вопрос">
+        <bpmn:incoming>Flow_CycleStartToShowCard</bpmn:incoming>
+        <bpmn:incoming>Flow_NextCardYes</bpmn:incoming>
+        <bpmn:outgoing>Flow_ShowCardToMark</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="Task_MarkCardDiscussed" name="Отметить карточку обсуждённой">
+        <bpmn:incoming>Flow_ShowCardToMark</bpmn:incoming>
+        <bpmn:outgoing>Flow_MarkToPenaltyCheck</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="Gateway_PenaltyActive" name="Штрафная механика активна?" default="Flow_PenaltyNo">
+        <bpmn:incoming>Flow_MarkToPenaltyCheck</bpmn:incoming>
+        <bpmn:outgoing>Flow_PenaltyYes</bpmn:outgoing>
+        <bpmn:outgoing>Flow_PenaltyNo</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="Task_ShowPenalty" name="Показать штрафное задание">
+        <bpmn:incoming>Flow_PenaltyYes</bpmn:incoming>
+        <bpmn:outgoing>Flow_PenaltyToJoin</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="Gateway_PenaltyJoin" name="">
+        <bpmn:incoming>Flow_PenaltyNo</bpmn:incoming>
+        <bpmn:incoming>Flow_PenaltyToJoin</bpmn:incoming>
+        <bpmn:outgoing>Flow_PenaltyJoinToNextCheck</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="Gateway_HasNextCard" name="Есть следующая карточка?" default="Flow_NoMoreCards">
+        <bpmn:incoming>Flow_PenaltyJoinToNextCheck</bpmn:incoming>
+        <bpmn:outgoing>Flow_NextCardYes</bpmn:outgoing>
+        <bpmn:outgoing>Flow_NoMoreCards</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="Event_CycleComplete" name="Все карточки обсуждены">
+        <bpmn:incoming>Flow_NoMoreCards</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_CycleStartToShowCard" sourceRef="Event_CycleStart" targetRef="Task_ShowCard" />
+      <bpmn:sequenceFlow id="Flow_ShowCardToMark" sourceRef="Task_ShowCard" targetRef="Task_MarkCardDiscussed" />
+      <bpmn:sequenceFlow id="Flow_MarkToPenaltyCheck" sourceRef="Task_MarkCardDiscussed" targetRef="Gateway_PenaltyActive" />
+      <bpmn:sequenceFlow id="Flow_PenaltyYes" name="Да" sourceRef="Gateway_PenaltyActive" targetRef="Task_ShowPenalty">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${penaltyEnabled == true}</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_PenaltyNo" name="Нет" sourceRef="Gateway_PenaltyActive" targetRef="Gateway_PenaltyJoin" />
+      <bpmn:sequenceFlow id="Flow_PenaltyToJoin" sourceRef="Task_ShowPenalty" targetRef="Gateway_PenaltyJoin" />
+      <bpmn:sequenceFlow id="Flow_PenaltyJoinToNextCheck" sourceRef="Gateway_PenaltyJoin" targetRef="Gateway_HasNextCard" />
+      <bpmn:sequenceFlow id="Flow_NextCardYes" name="Да" sourceRef="Gateway_HasNextCard" targetRef="Task_ShowCard">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasNextCard == true}</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_NoMoreCards" name="Нет" sourceRef="Gateway_HasNextCard" targetRef="Event_CycleComplete" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Boundary_PlayerExit" name="Игрок вышел" cancelActivity="false" attachedToRef="SubProcess_GameCycle">
+      <bpmn:outgoing>Flow_ExitToSave</bpmn:outgoing>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_MiniAppStartToCatalog" sourceRef="Event_MiniAppStart" targetRef="Task_OpenCatalog" />
+    <bpmn:sequenceFlow id="Flow_CatalogToFilters" sourceRef="Task_OpenCatalog" targetRef="Task_ApplyFilters" />
+    <bpmn:sequenceFlow id="Flow_FiltersToSelect" sourceRef="Task_ApplyFilters" targetRef="Task_SelectDeck" />
+    <bpmn:sequenceFlow id="Flow_SelectToStart" sourceRef="Task_SelectDeck" targetRef="Task_StartSession" />
+    <bpmn:sequenceFlow id="Flow_ReturnFromExit" sourceRef="Task_DeepLinkReturn" targetRef="Task_StartSession" />
+    <bpmn:sequenceFlow id="Flow_StartToGameCycle" sourceRef="Task_StartSession" targetRef="SubProcess_GameCycle" />
+    <bpmn:sequenceFlow id="Flow_GameCycleToResults" sourceRef="SubProcess_GameCycle" targetRef="Task_ShowResults" />
+    <bpmn:sequenceFlow id="Flow_ResultsEnd" sourceRef="Task_ShowResults" targetRef="Event_MiniAppEnd" />
+    <bpmn:sequenceFlow id="Flow_PauseToEnd" sourceRef="Task_PauseSession" targetRef="Event_MiniAppEnd" />
+    <bpmn:sequenceFlow id="Flow_ExitToSave" sourceRef="Boundary_PlayerExit" targetRef="Task_SaveProgress" />
+    <bpmn:sequenceFlow id="Flow_SaveToDeepLink" sourceRef="Task_SaveProgress" targetRef="Task_DeepLinkReturn" />
+    <bpmn:sequenceFlow id="Flow_TimeoutToPause" sourceRef="Boundary_Timeout" targetRef="Task_PauseSession" />
+  </bpmn:process>
+  <bpmn:process id="Process_Backend" isExecutable="false">
+    <bpmn:startEvent id="Event_BackendStart" name="Запрос на создание сессии">
+      <bpmn:outgoing>Flow_BackendStartToCreate</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:task id="Task_BackendCreateSession" name="Создать сессию и вернуть колоду">
+      <bpmn:incoming>Flow_BackendStartToCreate</bpmn:incoming>
+      <bpmn:outgoing>Flow_SessionCreated</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_BackendFixCard" name="Зафиксировать обсуждённую карточку">
+      <bpmn:incoming>Flow_SessionCreated</bpmn:incoming>
+      <bpmn:outgoing>Flow_FixToFormResults</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_FormResults" name="Сформировать итоги встречи">
+      <bpmn:incoming>Flow_FixToFormResults</bpmn:incoming>
+      <bpmn:outgoing>Flow_ResultsToReminder</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_SetReminder" name="Установить ежедневное напоминание">
+      <bpmn:incoming>Flow_ResultsToReminder</bpmn:incoming>
+      <bpmn:outgoing>Flow_ReminderToEnd</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_BackendEnd" name="Завершено">
+      <bpmn:incoming>Flow_ReminderToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_BackendStartToCreate" sourceRef="Event_BackendStart" targetRef="Task_BackendCreateSession" />
+    <bpmn:sequenceFlow id="Flow_SessionCreated" sourceRef="Task_BackendCreateSession" targetRef="Task_BackendFixCard" />
+    <bpmn:sequenceFlow id="Flow_FixToFormResults" sourceRef="Task_BackendFixCard" targetRef="Task_FormResults" />
+    <bpmn:sequenceFlow id="Flow_ResultsToReminder" sourceRef="Task_FormResults" targetRef="Task_SetReminder" />
+    <bpmn:sequenceFlow id="Flow_ReminderToEnd" sourceRef="Task_SetReminder" targetRef="Event_BackendEnd" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collaboration_ToBe_Game">
+    <bpmndi:BPMNPlane id="BPMNPlane_Collaboration_ToBe_Game" bpmnElement="Collaboration_ToBe_Game">
+      <bpmndi:BPMNShape id="Participant_Players_di" bpmnElement="Participant_Players" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1210" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Start_di" bpmnElement="Event_Start" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="220" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#6b3c00">
+          <dc:Bounds x="193" y="94" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0smljod_di" bpmnElement="Activity_0smljod" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="310" y="110" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0l1ns2y_di" bpmnElement="Task_PlayersDiscuss" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="480" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_PlayersEnd_di" bpmnElement="Event_PlayersEnd" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="622" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="609" y="168" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_DiscussToEnd_di" bpmnElement="Flow_DiscussToEnd" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="580" y="150" />
+        <di:waypoint x="622" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07ozq5z_di" bpmnElement="Flow_07ozq5z" bioc:stroke="#6b3c00" color:border-color="#6b3c00">
+        <di:waypoint x="256" y="150" />
+        <di:waypoint x="310" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_01n4m2w_di" bpmnElement="Flow_01n4m2w" bioc:stroke="#6b3c00" color:border-color="#6b3c00">
+        <di:waypoint x="410" y="150" />
+        <di:waypoint x="480" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_ChatBot_di" bpmnElement="Participant_ChatBot" isHorizontal="true">
+        <dc:Bounds x="160" y="280" width="1210" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BotWelcome_di" bpmnElement="Task_BotWelcome" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="320" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_BotStart_di" bpmnElement="Event_BotStart" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="220" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#6b3c00">
+          <dc:Bounds x="200" y="358" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendOpenButton_di" bpmnElement="Task_SendOpenButton" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="480" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ResultsReceived_di" bpmnElement="Event_ResultsReceived" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="642" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="619" y="295" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BotNotifyResult_di" bpmnElement="Task_BotNotifyResult" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="730" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BotOfferReminder_di" bpmnElement="Task_BotOfferReminder" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="870" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ReminderAgreed_di" bpmnElement="Gateway_ReminderAgreed" isMarkerVisible="true" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1015" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="1002" y="288" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ReminderSet_di" bpmnElement="Event_ReminderSet" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1142" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="1125" y="348" width="71" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_GameComplete_di" bpmnElement="Event_GameComplete" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1142" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="1118" y="418" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_BotStartToWelcome_di" bpmnElement="Flow_BotStartToWelcome" bioc:stroke="#6b3c00" color:border-color="#6b3c00">
+        <di:waypoint x="256" y="330" />
+        <di:waypoint x="320" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WelcomeToAsk_di" bpmnElement="Flow_WelcomeToAsk" bioc:stroke="#6b3c00" color:border-color="#6b3c00">
+        <di:waypoint x="420" y="330" />
+        <di:waypoint x="480" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OpenToWait_di" bpmnElement="Flow_OpenToWait" bioc:stroke="#6b3c00" color:border-color="#6b3c00">
+        <di:waypoint x="580" y="330" />
+        <di:waypoint x="600" y="330" />
+        <di:waypoint x="600" y="350" />
+        <di:waypoint x="642" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ResultsToNotify_di" bpmnElement="Flow_ResultsToNotify" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="678" y="350" />
+        <di:waypoint x="704" y="350" />
+        <di:waypoint x="704" y="330" />
+        <di:waypoint x="730" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NotifyToReminder_di" bpmnElement="Flow_NotifyToReminder" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="830" y="330" />
+        <di:waypoint x="870" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OfferToGateway_di" bpmnElement="Flow_OfferToGateway" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="970" y="330" />
+        <di:waypoint x="993" y="330" />
+        <di:waypoint x="993" y="350" />
+        <di:waypoint x="1015" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ReminderYes_di" bpmnElement="Flow_ReminderYes" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="1065" y="350" />
+        <di:waypoint x="1104" y="350" />
+        <di:waypoint x="1104" y="330" />
+        <di:waypoint x="1142" y="330" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="1116" y="305" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ReminderNo_di" bpmnElement="Flow_ReminderNo" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="1040" y="375" />
+        <di:waypoint x="1040" y="400" />
+        <di:waypoint x="1142" y="400" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="1046" y="380" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_MiniApp_di" bpmnElement="Participant_MiniApp" isHorizontal="true">
+        <dc:Bounds x="160" y="540" width="1210" height="292" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_MiniAppStart_di" bpmnElement="Event_MiniAppStart" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="220" y="592" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#0d4372">
+          <dc:Bounds x="194" y="628" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OpenCatalog_di" bpmnElement="Task_OpenCatalog" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="338" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ApplyFilters_di" bpmnElement="Task_ApplyFilters" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="488" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SelectDeck_di" bpmnElement="Task_SelectDeck" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="638" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_StartSession_di" bpmnElement="Task_StartSession" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="788" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ShowResults_di" bpmnElement="Task_ShowResults" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1114" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_MiniAppEnd_di" bpmnElement="Event_MiniAppEnd" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1262" y="592" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="1251" y="568" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SaveProgress_di" bpmnElement="Task_SaveProgress" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="890" y="732" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DeepLinkReturn_di" bpmnElement="Task_DeepLinkReturn" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="740" y="732" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PauseSession_di" bpmnElement="Task_PauseSession" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1230" y="650" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_092wyz7_di" bpmnElement="Boundary_Timeout" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1262" y="754" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="1240" y="790" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubProcess_GameCycle_di" bpmnElement="SubProcess_GameCycle" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="938" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_PlayerExit_di" bpmnElement="Boundary_PlayerExit" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="942" y="632" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#831311">
+          <dc:Bounds x="927" y="668" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_MiniAppStartToCatalog_di" bpmnElement="Flow_MiniAppStartToCatalog" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="256" y="610" />
+        <di:waypoint x="338" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CatalogToFilters_di" bpmnElement="Flow_CatalogToFilters" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="438" y="610" />
+        <di:waypoint x="488" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FiltersToSelect_di" bpmnElement="Flow_FiltersToSelect" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="588" y="610" />
+        <di:waypoint x="638" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SelectToStart_di" bpmnElement="Flow_SelectToStart" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="738" y="610" />
+        <di:waypoint x="788" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ReturnFromExit_di" bpmnElement="Flow_ReturnFromExit" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="810" y="732" />
+        <di:waypoint x="810" y="712" />
+        <di:waypoint x="860" y="712" />
+        <di:waypoint x="860" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StartToGameCycle_di" bpmnElement="Flow_StartToGameCycle" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="888" y="610" />
+        <di:waypoint x="938" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_GameCycleToResults_di" bpmnElement="Flow_GameCycleToResults" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="1038" y="610" />
+        <di:waypoint x="1114" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ResultsEnd_di" bpmnElement="Flow_ResultsEnd" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="1214" y="610" />
+        <di:waypoint x="1262" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PauseToEnd_di" bpmnElement="Flow_PauseToEnd" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="1280" y="650" />
+        <di:waypoint x="1280" y="628" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ExitToSave_di" bpmnElement="Flow_ExitToSave" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="960" y="668" />
+        <di:waypoint x="960" y="732" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SaveToDeepLink_di" bpmnElement="Flow_SaveToDeepLink" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="890" y="772" />
+        <di:waypoint x="840" y="772" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TimeoutToPause_di" bpmnElement="Flow_TimeoutToPause" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="1280" y="754" />
+        <di:waypoint x="1280" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Backend_di" bpmnElement="Participant_Backend" isHorizontal="true">
+        <dc:Bounds x="160" y="870" width="1210" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_BackendStart_di" bpmnElement="Event_BackendStart" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="220" y="922" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="196" y="958" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BackendCreateSession_di" bpmnElement="Task_BackendCreateSession" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="338" y="900" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BackendFixCard_di" bpmnElement="Task_BackendFixCard" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="488" y="900" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FormResults_di" bpmnElement="Task_FormResults" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="638" y="900" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SetReminder_di" bpmnElement="Task_SetReminder" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="788" y="900" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_BackendEnd_di" bpmnElement="Event_BackendEnd" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="970" y="922" width="36" height="36" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="959" y="958" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_BackendStartToCreate_di" bpmnElement="Flow_BackendStartToCreate">
+        <di:waypoint x="256" y="940" />
+        <di:waypoint x="338" y="940" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SessionCreated_di" bpmnElement="Flow_SessionCreated" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="438" y="940" />
+        <di:waypoint x="488" y="940" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FixToFormResults_di" bpmnElement="Flow_FixToFormResults" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="588" y="940" />
+        <di:waypoint x="638" y="940" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ResultsToReminder_di" bpmnElement="Flow_ResultsToReminder" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="738" y="940" />
+        <di:waypoint x="788" y="940" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ReminderToEnd_di" bpmnElement="Flow_ReminderToEnd" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="888" y="940" />
+        <di:waypoint x="970" y="940" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_4_di" bpmnElement="MsgFlow_4" bioc:stroke="#6b3c00" color:border-color="#6b3c00">
+        <di:waypoint x="530" y="370" />
+        <di:waypoint x="530" y="470" />
+        <di:waypoint x="238" y="470" />
+        <di:waypoint x="238" y="592" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_5_di" bpmnElement="MsgFlow_5" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="810" y="652" />
+        <di:waypoint x="810" y="690" />
+        <di:waypoint x="238" y="690" />
+        <di:waypoint x="238" y="922" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_6_di" bpmnElement="MsgFlow_6" bioc:stroke="#0d4372" color:border-color="#0d4372">
+        <di:waypoint x="388" y="900" />
+        <di:waypoint x="388" y="840" />
+        <di:waypoint x="1010" y="840" />
+        <di:waypoint x="1010" y="652" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_8_di" bpmnElement="MsgFlow_8" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="688" y="900" />
+        <di:waypoint x="688" y="850" />
+        <di:waypoint x="1090" y="850" />
+        <di:waypoint x="1090" y="622" />
+        <di:waypoint x="1114" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_9_di" bpmnElement="MsgFlow_9">
+        <di:waypoint x="1164" y="570" />
+        <di:waypoint x="1164" y="450" />
+        <di:waypoint x="660" y="450" />
+        <di:waypoint x="660" y="368" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_10_di" bpmnElement="MsgFlow_10" bioc:stroke="#205022" color:border-color="#205022">
+        <di:waypoint x="920" y="290" />
+        <di:waypoint x="920" y="250" />
+        <di:waypoint x="1390" y="250" />
+        <di:waypoint x="1390" y="860" />
+        <di:waypoint x="838" y="860" />
+        <di:waypoint x="838" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nsdqdj_di" bpmnElement="Flow_0nsdqdj" bioc:stroke="#6b3c00" color:border-color="#6b3c00">
+        <di:waypoint x="360" y="190" />
+        <di:waypoint x="360" y="261" />
+        <di:waypoint x="238" y="261" />
+        <di:waypoint x="238" y="312" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_SubProcess_GameCycle">
+    <bpmndi:BPMNPlane id="BPMNPlane_SubProcess_GameCycle" bpmnElement="SubProcess_GameCycle">
+      <bpmndi:BPMNShape id="Event_CycleStart_di" bpmnElement="Event_CycleStart" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="36" y="88" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ShowCard_di" bpmnElement="Task_ShowCard" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MarkCardDiscussed_di" bpmnElement="Task_MarkCardDiscussed" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PenaltyActive_di" bpmnElement="Gateway_PenaltyActive" isMarkerVisible="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="500" y="45" width="50" height="50" />
+        <bpmndi:BPMNLabel color:color="#831311">
+          <dc:Bounds x="497" y="-5" width="55" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ShowPenalty_di" bpmnElement="Task_ShowPenalty" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PenaltyJoin_di" bpmnElement="Gateway_PenaltyJoin" isMarkerVisible="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="650" y="185" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_HasNextCard_di" bpmnElement="Gateway_HasNextCard" isMarkerVisible="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="800" y="185" width="50" height="50" />
+        <bpmndi:BPMNLabel color:color="#831311">
+          <dc:Bounds x="782" y="147.5" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_CycleComplete_di" bpmnElement="Event_CycleComplete" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="957" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="942" y="228" width="67" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_CycleStartToShowCard_di" bpmnElement="Flow_CycleStartToShowCard" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ShowCardToMark_di" bpmnElement="Flow_ShowCardToMark" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MarkToPenaltyCheck_di" bpmnElement="Flow_MarkToPenaltyCheck" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="500" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PenaltyYes_di" bpmnElement="Flow_PenaltyYes" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="550" y="70" />
+        <di:waypoint x="625" y="70" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="581" y="45" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PenaltyNo_di" bpmnElement="Flow_PenaltyNo" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="525" y="95" />
+        <di:waypoint x="525" y="210" />
+        <di:waypoint x="650" y="210" />
+        <bpmndi:BPMNLabel color:color="#831311">
+          <dc:Bounds x="531" y="143" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PenaltyToJoin_di" bpmnElement="Flow_PenaltyToJoin" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="675" y="110" />
+        <di:waypoint x="675" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PenaltyJoinToNextCheck_di" bpmnElement="Flow_PenaltyJoinToNextCheck" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="700" y="210" />
+        <di:waypoint x="800" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NextCardYes_di" bpmnElement="Flow_NextCardYes" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="825" y="235" />
+        <di:waypoint x="825" y="310" />
+        <di:waypoint x="225" y="310" />
+        <di:waypoint x="225" y="110" />
+        <bpmndi:BPMNLabel color:color="#831311">
+          <dc:Bounds x="518" y="285" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NoMoreCards_di" bpmnElement="Flow_NoMoreCards" bioc:stroke="#831311" color:border-color="#831311">
+        <di:waypoint x="850" y="210" />
+        <di:waypoint x="957" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="894" y="185" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
